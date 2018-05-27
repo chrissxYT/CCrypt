@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CCrypt
 {
@@ -12,92 +9,71 @@ namespace CCrypt
     {
         static void Main(string[] args)
         {
+            while(args.Length < 3)
+                args = Console.ReadLine().Split(' ');
+            if (args[0].ToUpper() == "ENC")
+                File.WriteAllText(args[1] + ".ccrypt", Cryptography.Encrypt(File.ReadAllBytes(args[1]), args[2]), Encoding.ASCII);
+            else if (args[0].ToUpper() == "DEC")
+                File.WriteAllBytes(Path.ChangeExtension(args[1], ""), Cryptography.Decrypt(File.ReadAllText(args[1], Encoding.ASCII), args[2]));
+            else
+                Main(args);
         }
     }
 
     static class Cryptography
     {
-        private static int _iterations = 2;
-        private static int _keySize = 256;
+        public static string Encrypt(byte[] value, string password) => Encrypt<AesManaged>(value, password);
 
-        private static string _hash = "SHA1";
-        private static string _salt = "aselrias38490a32";
-        private static string _vector = "8947az34awl34kjq";
-
-        public static string Encrypt(string value, string password) => Encrypt<AesManaged>(value, password);
-
-        public static string Encrypt<T>(string value, string password) where T : SymmetricAlgorithm, new()
+        static string Encrypt<T>(byte[] value, string password) where T : SymmetricAlgorithm, new()
         {
-            byte[] vectorBytes = Encoding.ASCII.GetBytes(_vector);
-            byte[] saltBytes = Encoding.ASCII.GetBytes(_salt);
-            byte[] valueBytes = GetBytes<UTF8Encoding>(value);
-
             byte[] encrypted;
+            string res = null;
             using (T cipher = new T())
             {
-                PasswordDeriveBytes _passwordBytes =
-                    new PasswordDeriveBytes(password, saltBytes, _hash, _iterations);
-                byte[] keyBytes = _passwordBytes.GetBytes(_keySize / 8);
+                PasswordDeriveBytes _passwordBytes = new PasswordDeriveBytes(password, Encoding.ASCII.GetBytes("aselrias38490a32"), "SHA1", 2);
+                byte[] keyBytes = _passwordBytes.GetBytes(32);
 
                 cipher.Mode = CipherMode.CBC;
 
-                using (ICryptoTransform encryptor = cipher.CreateEncryptor(keyBytes, vectorBytes))
-                {
-                    using (MemoryStream to = new MemoryStream())
-                    {
-                        using (CryptoStream writer = new CryptoStream(to, encryptor, CryptoStreamMode.Write))
-                        {
-                            writer.Write(valueBytes, 0, valueBytes.Length);
-                            writer.FlushFinalBlock();
-                            encrypted = to.ToArray();
-                        }
-                    }
-                }
-                cipher.Clear();
+                ICryptoTransform encryptor = cipher.CreateEncryptor(keyBytes, Encoding.ASCII.GetBytes("8947az34awl34kjq"));
+                MemoryStream to = new MemoryStream();
+                CryptoStream writer = new CryptoStream(to, encryptor, CryptoStreamMode.Write);
+
+                writer.Write(value, 0, value.Length);
+                writer.FlushFinalBlock();
+                encrypted = to.ToArray();
+                res = Convert.ToBase64String(encrypted);
             }
-            return Convert.ToBase64String(encrypted);
+            GC.Collect();
+            return res;
         }
 
-        public static string Decrypt(string value, string password) => Decrypt<AesManaged>(value, password);
+        public static byte[] Decrypt(string value, string password) => Decrypt<AesManaged>(value, password);
 
-        public static string Decrypt<T>(string value, string password) where T : SymmetricAlgorithm, new()
+        static byte[] Decrypt<T>(string value, string password) where T : SymmetricAlgorithm, new()
         {
-            byte[] vectorBytes = Encoding.ASCII.GetBytes(_vector);
-            byte[] saltBytes = Encoding.ASCII.GetBytes(_salt);
-            byte[] valueBytes = Convert.FromBase64String(value);
-
-            byte[] decrypted;
+            byte[] vb = Convert.FromBase64String(value);
+            byte[] decrypted = null;
+            byte[] a = null;
             int decryptedByteCount = 0;
 
             using (T cipher = new T())
             {
-                PasswordDeriveBytes _passwordBytes = new PasswordDeriveBytes(password, saltBytes, _hash, _iterations);
-                byte[] keyBytes = _passwordBytes.GetBytes(_keySize / 8);
+                PasswordDeriveBytes _passwordBytes = new PasswordDeriveBytes(password, Encoding.ASCII.GetBytes("aselrias38490a32"), "SHA1", 2);
+                byte[] keyBytes = _passwordBytes.GetBytes(32);
 
                 cipher.Mode = CipherMode.CBC;
 
-                try
-                {
-                    using (ICryptoTransform decryptor = cipher.CreateDecryptor(keyBytes, vectorBytes))
-                    {
-                        using (MemoryStream from = new MemoryStream(valueBytes))
-                        {
-                            using (CryptoStream reader = new CryptoStream(from, decryptor, CryptoStreamMode.Read))
-                            {
-                                decrypted = new byte[valueBytes.Length];
-                                decryptedByteCount = reader.Read(decrypted, 0, decrypted.Length);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return String.Empty;
-                }
-
-                cipher.Clear();
+                ICryptoTransform decryptor = cipher.CreateDecryptor(keyBytes, Encoding.ASCII.GetBytes("8947az34awl34kjq"));
+                MemoryStream from = new MemoryStream(vb);
+                CryptoStream reader = new CryptoStream(from, decryptor, CryptoStreamMode.Read);
+                decrypted = new byte[vb.Length];
+                decryptedByteCount = reader.Read(decrypted, 0, decrypted.Length);
+                a = new byte[decryptedByteCount];
+                Array.Copy(decrypted, a, decryptedByteCount);
             }
-            return Encoding.UTF8.GetString(decrypted, 0, decryptedByteCount);
+            GC.Collect();
+            return a;
         }
     }
 }
