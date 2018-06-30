@@ -23,7 +23,7 @@ namespace CCrypt2
                     of += ".ccrypt2";
                 string[] ifs = get_ifs(args);
                 MemoryStream cs = new MemoryStream();
-                ZipArchive cz = new ZipArchive(cs, ZipArchiveMode.Create, true, Encoding.Unicode);
+                ZipArchive cz = new ZipArchive(cs, ZipArchiveMode.Create, true, Encoding.UTF8);
                 foreach (string infile in ifs)
                     cz.CreateEntryFromFile(infile, Path.GetFileName(infile), CompressionLevel.Optimal);
                 cz.Dispose();
@@ -51,12 +51,15 @@ namespace CCrypt2
                     throw new Exception($"The CCrypt-file-version {i} is too new for this version of the CCrypt-executable.");
                 vs.Close();
                 Stream es = iz.GetEntry("E").Open();
-                byte[] b = new byte[es.Length];
-                es.Read(b, 0, b.Length);
-                b = dec(b, pw);
+                List<byte> b_ = new List<byte>();
+                int j = -1;
+                while ((j = es.ReadByte()) != -1)
+                    b_.Add((byte)j);
                 es.Close();
+                byte[] b = b_.ToArray();
+                b = dec(b, pw);
                 MemoryStream cs = new MemoryStream(b, false);
-                ZipArchive cz = new ZipArchive(cs, ZipArchiveMode.Read, true, Encoding.Unicode);
+                ZipArchive cz = new ZipArchive(cs, ZipArchiveMode.Read, true, Encoding.UTF8);
                 foreach (ZipArchiveEntry e in cz.Entries)
                     e.ExtractToFile(Path.Combine(od, e.Name), true);
                 cz.Dispose();
