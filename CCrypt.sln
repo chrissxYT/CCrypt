@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCrypt", "CCrypt\CCrypt.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCrypt2", "CCrypt2\CCrypt2.csproj", "{29DFA7D1-9A19-40C5-A417-722797D2A65E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCrypt3", "CCrypt3\CCrypt3.csproj", "{77648E6F-240F-47F5-BFA8-17ECCA99DD59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{29DFA7D1-9A19-40C5-A417-722797D2A65E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{29DFA7D1-9A19-40C5-A417-722797D2A65E}.Release|x64.ActiveCfg = Release|x64
 		{29DFA7D1-9A19-40C5-A417-722797D2A65E}.Release|x64.Build.0 = Release|x64
+		{77648E6F-240F-47F5-BFA8-17ECCA99DD59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77648E6F-240F-47F5-BFA8-17ECCA99DD59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77648E6F-240F-47F5-BFA8-17ECCA99DD59}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{77648E6F-240F-47F5-BFA8-17ECCA99DD59}.Debug|x64.Build.0 = Debug|Any CPU
+		{77648E6F-240F-47F5-BFA8-17ECCA99DD59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77648E6F-240F-47F5-BFA8-17ECCA99DD59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77648E6F-240F-47F5-BFA8-17ECCA99DD59}.Release|x64.ActiveCfg = Release|Any CPU
+		{77648E6F-240F-47F5-BFA8-17ECCA99DD59}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
