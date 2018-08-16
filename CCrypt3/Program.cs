@@ -53,8 +53,9 @@ namespace CCrypt3
                 ofs.w(bfr.Length);
                 foreach(string f in ifs)
                 {
-                    ofs.w(f.Length);
-                    ofs.w(f, Encoding.Unicode);
+                    string fn = Path.GetFileName(f);
+                    ofs.w(fn.Length);
+                    ofs.w(fn, Encoding.Unicode);
                     ofs.w(new FileInfo(f).Length);
                     FileStream s = File.Open(f, FileMode.Open, FileAccess.Read);
                     while ((count = s.Read(bfr, 0, bfr.Length)) > 0)
@@ -64,11 +65,9 @@ namespace CCrypt3
                     }
                     s.Close();
                 }
-                ofs.w(0xcccccccc);
                 aes.Close();
                 ofs.Close();
-                bfr = null;
-                GC.Collect();
+                Environment.Exit(0);
             }
             else
             {
