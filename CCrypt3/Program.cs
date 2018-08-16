@@ -61,17 +61,61 @@ namespace CCrypt3
                     while ((count = s.Read(bfr, 0, bfr.Length)) > 0)
                     {
                         ofs.w(CRC.CRC32(bfr));
-                        aes.w(bfr);
+                        aes.Write(bfr, 0, count);
                     }
                     s.Close();
                 }
+                ofs.w((int)-1);
                 aes.Close();
                 ofs.Close();
                 Environment.Exit(0);
             }
             else
             {
-                //decrypt
+                Write("Password: ");
+                string pw = ReadLine();
+                Clear();
+                Write("Output dir:");
+                string od = ReadLine().Replace("\"", "");
+                Write("Input file:");
+                string iF = ReadLine().Replace("\"", "");
+                FileStream ifs = File.Open(iF, FileMode.Open, FileAccess.Read);
+                byte[] key = SHA256.Create().ComputeHash(Encoding.Unicode.GetBytes(pw));
+                CryptoStream aes = new CryptoStream(ifs, new AesManaged().CreateDecryptor(key, IV), CryptoStreamMode.Read);
+                ifs.s(CCRYPT3_HEADER.Length);
+                byte[] bfr = new byte[ifs.ri()];
+                int fn_len = -1;
+                while((fn_len = ifs.ri()) > 0)
+                {
+                    string fn = ifs.rs(fn_len, Encoding.Unicode);
+                    long len = ifs.rl();
+                    FileStream os = File.Open(Path.Combine(od, fn), FileMode.Create, FileAccess.Write);
+                    long iterations = len / bfr.LongLength;
+                    long last_block = len % bfr.LongLength;
+                    for(long i = 0; i < iterations; i++)
+                    {
+                        uint fcrc = ifs.rui();
+                        aes.Read(bfr, 0, bfr.Length);
+                        uint dcrc = CRC.CRC32(bfr);
+                        if (fcrc != dcrc)
+                            throw new Exception($"The CRC32 of the file [{fcrc.ToString("X2")}] does not match the CRC32 of the " +
+                                $"decrypted bytes [{dcrc.ToString("X2")}] + . This either means your file is damaged" +
+                                $"or your password is incorrect.");
+                        os.w(bfr);
+                    }
+                    uint _fcrc = ifs.rui();
+                    aes.Read(bfr, 0, (int)last_block);
+                    uint _dcrc = CRC.CRC32(bfr);
+                    if (_fcrc != _dcrc)
+                        throw new Exception($"The CRC32 of the file [{_fcrc.ToString("X2")}] does not match the CRC32 of the " +
+                            $"decrypted bytes [{_dcrc.ToString("X2")}] + . This either means your file is damaged" +
+                            $"or your password is incorrect.");
+                    os.Write(bfr, 0, (int)last_block);
+                    os.Close();
+                }
+                aes.Close();
+                ifs.Close();
+                Environment.Exit(0);
             }
         }
 
@@ -115,6 +159,47 @@ namespace CCrypt3
         static void w(this Stream s, string t, Encoding e)
         {
             s.Write(e.GetBytes(t), 0, e.GetByteCount(t));
+        }
+
+        static byte[] r(this Stream s, int count)
+        {
+            byte[] b = new byte[count];
+            s.Read(b, 0, count);
+            return b;
+        }
+
+        static int ri(this Stream s)
+        {
+            byte[] b = s.r(4);
+            if (BIG_ENDIAN)
+                Array.Reverse(b);
+            return BitConverter.ToInt32(b, 0);
+        }
+
+        static uint rui(this Stream s)
+        {
+            byte[] b = s.r(4);
+            if (BIG_ENDIAN)
+                Array.Reverse(b);
+            return BitConverter.ToUInt32(b, 0);
+        }
+
+        static long rl(this Stream s)
+        {
+            byte[] b = s.r(8);
+            if (BIG_ENDIAN)
+                Array.Reverse(b);
+            return BitConverter.ToInt64(b, 0);
+        }
+
+        static string rs(this Stream s, int len, Encoding e)
+        {
+            return e.GetString(s.r(len * e.GetByteCount("c")));
+        }
+
+        static void s(this Stream s, int count)
+        {
+            s.r(count);
         }
     }
     
