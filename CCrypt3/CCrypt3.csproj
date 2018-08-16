@@ -6,10 +6,4 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Reference Include="LZ4PCL">
-      <HintPath>..\..\..\..\Downloads\LZ4PCL.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
